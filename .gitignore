@@ -1,0 +1,15 @@
+../venv/bin/python
+venv/bin/python3
+python3.6
+venv
+
+.idea
+.pytest_cache
+*.eggs
+*.egg-info
+__pycache__/
+*.pyc
+
+
+media
+static
