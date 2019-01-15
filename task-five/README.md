@@ -14,6 +14,8 @@ $ docker images
 
 ## 3. Запускаем подцепившись в сеть и убрав внешние порты.
 
+# ВАЖНО!!! У вас будет свой путь до папки на хост машине!!!
+
 ```bash
 $ docker run --rm -d -v ~/projects/docker_less/media/:/app/media -e smtp_host=postfix -e smtp_user=user -e smtp_password=password --name task-five-cont --net examplenet task-five-image
 ```

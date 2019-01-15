@@ -31,3 +31,4 @@
 * docker images -q - ID образов
 * docker images -f dangling=true - Список подвисших образов
 * docker images -f dangling=true -q | xargs docker rmi - Удаление подвисших образов
+* docker system prune  - Удалить все подвисшее

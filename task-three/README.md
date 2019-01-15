@@ -27,6 +27,8 @@ $ docker run --rm -p 5000:5000 -d --name task-three-cont task-three-image  # З�
 
 ## 4. Примаунтим папку с приложением:
 
+# ВАЖНО!!! У вас будет свой путь до папки на хост машине!!!
+
 ```bash
 $ docker run --rm -d -p 5000:5000 -v ~/projects/docker_less/media/:/app/media --name task-three-cont task-three-image
 ```
