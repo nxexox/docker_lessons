@@ -53,13 +53,13 @@ def upload_file():
             minio_client.put_object(
                 MINIO_BUCKET_NAME, filename, file, len(file_bytes)
             )
-            mongo[MONGO_DB].uploads.insert_one(
+            mongo.db.uploads.insert_one(
                 {'bucket': MINIO_BUCKET_NAME, 'filename': filename,
                  'size': len(file_bytes), 'date_upload': datetime.datetime.now().isoformat()}
             )
             # return redirect('/upload-file/')
 
-    docs = list(mongo[MONGO_DB].uploads.find())
+    docs = list(mongo.db.uploads.find())
     documents = '<ul>{}</ul>'.format(
         ''.join([
             '<li>Bucket: `{}`, Filename: `{}`, Filesize: `{}`, Date Upload: `{}`</li>'.format(

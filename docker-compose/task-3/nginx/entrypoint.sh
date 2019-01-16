@@ -8,7 +8,7 @@ echo "Waiting for Backend"
 wait-for-it.sh \
 	--host=${BACKEND_HOST} \
 	--port=${BACKEND_PORT} \
-	--timeout=15 \
+	--timeout=80 \
 	--strict \
 	-- echo "Backend is up"
 

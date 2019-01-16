@@ -9,11 +9,10 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - "../media:/data"
+      - ../media:/data
     environment:
       - MINIO_ACCESS_KEY=9QO0C55OGEG79FWQGCGW
       - MINIO_SECRET_KEY=S00ICE545g3M8b9RqM2xCNFuGlU6wKy2rkVJAz5y
-    restart: on-failure
 
   # База
   mongo:
@@ -30,10 +29,6 @@ services:
     depends_on:
       - s3
       - mongo
-    # links можно не писать
-    links:
-      - s3
-      - mongo
     environment:
       - MINIO_HOST=s3
       - MINIO_PORT=9000
@@ -43,7 +38,6 @@ services:
       - MONGO_HOST=mongo
       - MONGO_PORT=27017
       - MONGO_DATABASE=mongo
-    restart: "no"
 
   # Веб сервер как морда
   nginx:
@@ -58,4 +52,3 @@ services:
       - backend
     ports:
       - "8000:80"
-    restart: "no"

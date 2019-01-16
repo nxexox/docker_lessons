@@ -1,12 +1,13 @@
 import os
+import time
 
 from kafka import KafkaConsumer
+from kafka.errors import NoBrokersAvailable
 
 KAFKA_SERVER = '{}:{}'.format(
     os.getenv('KAFKA_HOST'), os.getenv('KAFKA_PORT')
 )
 KAFKA_TOPIC = os.getenv('KAFKA_TOPIC')
-
 
 consumer = KafkaConsumer(KAFKA_TOPIC,
                          group_id=KAFKA_TOPIC,

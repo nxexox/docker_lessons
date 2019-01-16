@@ -9,7 +9,7 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - "../media:/data"
+      - media:/data
     environment:
       - MINIO_ACCESS_KEY=9QO0C55OGEG79FWQGCGW
       - MINIO_SECRET_KEY=S00ICE545g3M8b9RqM2xCNFuGlU6wKy2rkVJAz5y
@@ -20,8 +20,6 @@ services:
     image: bitnami/mongodb:latest
     container_name: mongo_docker
     restart: always
-    ports:
-      - "27017:27017"
 
   # Postfix для отправки почты
   postfix:
@@ -33,7 +31,7 @@ services:
 
   # Наше приложение для отправки почты
   postfix_backend:
-    container_name: postfix_backend__docker
+    container_name: postfix_backend_docker
     build:
       dockerfile: Dockerfile
       context: ./postfix_application
@@ -93,3 +91,11 @@ services:
     ports:
       - "8000:80"
     restart: "no"
+
+volumes:
+  media:
+    driver_opts:
+      type: none
+      # NOTE: обязательно писать полный путь. С ~ не работает
+      device: /Users/amnisia/projects/docker_less/docker-compose/media
+      o: bind

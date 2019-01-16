@@ -32,11 +32,9 @@ echo "Waiting for Kafka"
 wait-for-it.sh \
 	--host=${KAFKA_HOST} \
 	--port=${KAFKA_PORT} \
-	--timeout=15 \
+	--timeout=60 \
 	--strict \
 	-- echo "Kafka is up"
-
-sleep 5
 
 # Выполняем команду. Вместо $@ будет подставлена команда для запуска.
 exec $@

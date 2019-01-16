@@ -1,11 +1,13 @@
 import os
 import datetime
+import time
 
 import requests
 from flask import Flask, flash, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
 from kafka import KafkaProducer
+from kafka.errors import NoBrokersAvailable
 from flask_pymongo import PyMongo
 from minio import Minio
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou, BucketAlreadyExists)
@@ -42,6 +44,7 @@ KAFKA_SERVER = '{}:{}'.format(
 )
 KAFKA_TOPICS = os.getenv('KAFKA_TOPICS').split(',')
 KAFKA_TOPICS_DICT = {i: None for i in KAFKA_TOPICS}
+
 producer = KafkaProducer(bootstrap_servers=[KAFKA_SERVER],
                          request_timeout_ms=1000000,
                          api_version_auto_timeout_ms=1000000)
