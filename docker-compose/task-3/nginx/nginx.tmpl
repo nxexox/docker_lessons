@@ -1,0 +1,74 @@
+user nginx;
+daemon off;
+
+error_log /var/log/nginx/error.log;
+
+worker_processes auto;
+worker_cpu_affinity auto;
+
+pid /var/run/nginx.pid;
+
+events {
+    use epoll;
+    multi_accept on;
+    worker_connections  1024;
+}
+
+http {
+    gzip on;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+
+    charset utf-8;
+    charset_types text/xml text/plain text/css application/javascript application/rss+xml
+                  application/json application/x-www-form-urlencoded multipart/form-data;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    access_log /var/log/nginx/access.log;
+
+    proxy_cache_path /var/lib/nginx/cache levels=1:2 keys_zone=cache:30m max_size=1G;
+    proxy_temp_path /var/lib/nginx/proxy 1 2;
+    proxy_ignore_headers Expires Cache-Control;
+    proxy_cache_use_stale error timeout invalid_header http_502;
+    # proxy_cache_bypass $cookie_session;
+    # proxy_no_cache $cookie_session;
+    log_format timed_combined '$remote_addr - $remote_user [$time_local] $request" $status $body_bytes_sent '
+                              '"$http_referer" "$http_user_agent" '
+                              '$request_time $upstream_response_time $pipe';
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    upstream backend_server {
+        server ${BACKEND_HOST}:${BACKEND_PORT} fail_timeout=0;
+    }
+
+    server {
+        listen 80 default_server;
+        server_name 127.0.0.1;
+        charset utf-8;
+
+        # LOGS.
+        access_log /var/log/nginx/access.log timed_combined;
+
+        location /favicon.ico {
+            expires max;
+            access_log off;
+            log_not_found off;
+            add_header Cache-Control public;
+            root /usr/share/nginx/static;
+        }
+
+        location / {
+            add_header Front-End-Https on;
+            proxy_redirect off;
+            proxy_cache cache;
+            proxy_cache_valid 10m;
+            proxy_cache_valid 404 1m;
+            proxy_pass http://backend_server/;
+        }
+    }
+}
