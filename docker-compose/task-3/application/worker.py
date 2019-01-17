@@ -1,33 +1,33 @@
 import os
-import time
 
-from kafka import KafkaConsumer
-from kafka.errors import NoBrokersAvailable
+import redis
+import sys
 
-KAFKA_SERVER = '{}:{}'.format(
-    os.getenv('KAFKA_HOST'), os.getenv('KAFKA_PORT')
+redis_server = '{}:{}'.format(
+    os.getenv('REDIS_HOST'), os.getenv('REDIS_PORT', 6379)
 )
-KAFKA_TOPIC = os.getenv('KAFKA_TOPIC')
+client = redis.Redis(
+    host=os.getenv('REDIS_HOST'),
+    port=os.getenv('REDIS_PORT', 6379),
+    db=0
+)
+consumer = client.pubsub()
 
-consumer = KafkaConsumer(KAFKA_TOPIC,
-                         group_id=KAFKA_TOPIC,
-                         bootstrap_servers=[KAFKA_SERVER],
-                         request_timeout_ms=1000000,
-                         api_version_auto_timeout_ms=1000000)
+consumer.subscribe(os.getenv('REDIS_CHANNEL'))
 
 
 if __name__ == '__main__':
 
-    print('Start kafka `{}` worker in TOPIC `{}`.'.format(KAFKA_SERVER, KAFKA_TOPIC))
+    print('Start redis `{}` worker in TOPIC `{}`.'.format(redis_server, os.getenv('REDIS_CHANNEL')), file=sys.stdout)
     try:
-        for message in consumer:
-            print('NEW MESSAGE: {}:{}:{}, key=`{}`, value=`{}`'.format(
-                message.topic, message.partition, message.offset,
-                message.key, message.value
-            ))
+        for message in consumer.listen():
+            print('NEW MESSAGE: Type: `{}`, channel: `{}`, patter: `{}`, data: `{}`'.format(
+                message.get('type'), message.get('channel'), message.get('pattern'), message.get('data')
+            ), file=sys.stdout)
     except KeyboardInterrupt:
         pass
     except Exception:
         pass
 
-    print('Start kafka `{}` worker in TOPIC `{}`.'.format(KAFKA_SERVER, KAFKA_TOPIC))
+    consumer.close()
+    print('Start redis `{}` worker in TOPIC `{}`.'.format(redis_server, os.getenv('REDIS_CHANNEL')), file=sys.stdout)

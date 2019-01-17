@@ -42,4 +42,4 @@ def handler_400(e):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=os.getenv('EMAIL_BACKEND_PORT', 5000))
+    app.run(host='0.0.0.0', port=os.getenv('EMAIL_SERVICE_PORT', 5000))

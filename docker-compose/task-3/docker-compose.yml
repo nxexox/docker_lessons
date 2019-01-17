@@ -4,21 +4,21 @@ services:
   # Сервер с хранилищем файлов.
   s3:
     image: minio/minio:latest
-    container_name: miniodocker
+    container_name: miniodocker3
     command: server /data
     ports:
       - "9000:9000"
     volumes:
       - media:/data
     environment:
-      - MINIO_ACCESS_KEY=9QO0C55OGEG79FWQGCGW
-      - MINIO_SECRET_KEY=S00ICE545g3M8b9RqM2xCNFuGlU6wKy2rkVJAz5y
+      - MINIO_ACCESS_KEY
+      - MINIO_SECRET_KEY
     restart: on-failure
 
   # База
   mongo:
     image: bitnami/mongodb:latest
-    container_name: mongo_docker
+    container_name: mongo_docker_3
     restart: always
 
   # Postfix для отправки почты
@@ -26,12 +26,12 @@ services:
     image: catatnight/postfix
     container_name: postfix_docker
     environment:
-      - maildomain=localhost
-      - smtp_user=user:password
+      - maildomain=${maildomain}
+      - smtp_user=${smtp_user}
 
   # Наше приложение для отправки почты
   postfix_backend:
-    container_name: postfix_backend__docker
+    container_name: postfix_backend_docker_3
     build:
       dockerfile: Dockerfile
       context: ./postfix_application
@@ -41,30 +41,21 @@ services:
     links:
       - postfix
     environment:
-      - SMTP_HOST=postfix
-      - SMTP_PORT=25
-      - SMTP_USER=user
-      - SMTP_PASSWORD=password
-      - EMAIL_BACKEND_PORT=5000
+      - SMTP_HOST
+      - SMTP_PORT
+      - SMTP_USER
+      - SMTP_PASSWORD
+      - EMAIL_SERVICE_PORT
     restart: "no"
 
-  zookeeper:
-    image: zookeeper:3.4.12
-    ports:
-      - "2181:2181"
-
-  kafka:
-    image: nxexox/kafka-lesson-example:latest
-    depends_on:
-      - zookeeper
-    links:
-      - zookeeper
-    ports:
-      - "9092:9092"
+  redis:
+    image: redis:alpine
+    container_name: redis_docker_3
 
   # Наше приложение.
   backend:
-    container_name: backend_docker
+    container_name: backend_docker_3
+    env_file: .env
     build:
       dockerfile: Dockerfile
       context: ./application
@@ -72,34 +63,20 @@ services:
       - s3
       - mongo
       - postfix_backend
-      - kafka
+      - redis
     # links можно не писать
     links:
       - s3
       - mongo
       - postfix_backend
-      - kafka
-    environment:
-      - MINIO_HOST=s3
-      - MINIO_PORT=9000
-      - MINIO_ACCESS_KEY=9QO0C55OGEG79FWQGCGW
-      - MINIO_SECRET_KEY=S00ICE545g3M8b9RqM2xCNFuGlU6wKy2rkVJAz5y
-      - MINIO_BUCKET_NAME=bucket
-      - MONGO_HOST=mongo
-      - MONGO_PORT=27017
-      - MONGO_DATABASE=mongo
-      - EMAIL_SERVICE_HOST=postfix_backend
-      - EMAIL_SERVICE_PORT=5000
-      - BACKEND_PORT=5000
-      - KAFKA_HOST=kafka
-      - KAFKA_PORT=9092
-      - KAFKA_TOPICS=worker1,worker2
-      - ENVIRONMENT=application
+      - redis
     restart: "no"
+
   # Воркер 1
   worker1:
-    container_name: worker1_docker
-    command: python worker.py
+    container_name: worker1_docker_3
+    command: python -u worker.py
+    env_file: .env
     build:
       dockerfile: Dockerfile
       context: ./application
@@ -107,39 +84,47 @@ services:
       - s3
       - mongo
       - postfix_backend
-      - kafka
+      - redis
     links:
       - s3
       - mongo
       - postfix_backend
-      - kafka
+      - redis
     environment:
-      - MINIO_HOST=s3
-      - MINIO_PORT=9000
-      - MINIO_ACCESS_KEY=9QO0C55OGEG79FWQGCGW
-      - MINIO_SECRET_KEY=S00ICE545g3M8b9RqM2xCNFuGlU6wKy2rkVJAz5y
-      - MINIO_BUCKET_NAME=bucket
-      - MONGO_HOST=mongo
-      - MONGO_PORT=27017
-      - MONGO_DATABASE=mongo
-      - EMAIL_SERVICE_HOST=postfix_backend
-      - EMAIL_SERVICE_PORT=5000
-      - BACKEND_PORT=5000
-      - KAFKA_HOST=kafka
-      - KAFKA_PORT=9092
-      - KAFKA_TOPIC=worker1
-      - ENVIRONMENT=worker
+      - REDIS_CHANNEL=worker1
+    restart: "no"
+
+  # Воркер 2
+  worker2:
+    container_name: worker2_docker_3
+    command: python -u worker.py
+    env_file: .env
+    build:
+      dockerfile: Dockerfile
+      context: ./application
+    depends_on:
+      - s3
+      - mongo
+      - postfix_backend
+      - redis
+    links:
+      - s3
+      - mongo
+      - postfix_backend
+      - redis
+    environment:
+      - REDIS_CHANNEL=worker2
     restart: "no"
 
   # Веб сервер как морда
   nginx:
-    container_name: nginx_docker
+    container_name: nginx_docker_3
     build:
       context: ./nginx
       dockerfile: Dockerfile
     environment:
-      - BACKEND_HOST=backend
-      - BACKEND_PORT=5000
+      - BACKEND_HOST
+      - BACKEND_PORT
     depends_on:
       - backend
     ports:

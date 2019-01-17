@@ -2,4 +2,4 @@ Flask==1.0.2
 requests
 minio
 Flask-PyMongo
-kafka-python
+redis

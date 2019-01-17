@@ -6,8 +6,7 @@ import requests
 from flask import Flask, flash, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
-from kafka import KafkaProducer
-from kafka.errors import NoBrokersAvailable
+import redis
 from flask_pymongo import PyMongo
 from minio import Minio
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou, BucketAlreadyExists)
@@ -39,15 +38,19 @@ EMAIL_BACKEND_URI = 'http://{}:{}'.format(
     os.getenv('EMAIL_SERVICE_HOST', 'postfix_backend'),
     os.getenv('EMAIL_SERVICE_PORT', 5000)
 )
-KAFKA_SERVER = '{}:{}'.format(
-    os.getenv('KAFKA_HOST'), os.getenv('KAFKA_PORT')
-)
-KAFKA_TOPICS = os.getenv('KAFKA_TOPICS').split(',')
-KAFKA_TOPICS_DICT = {i: None for i in KAFKA_TOPICS}
 
-producer = KafkaProducer(bootstrap_servers=[KAFKA_SERVER],
-                         request_timeout_ms=1000000,
-                         api_version_auto_timeout_ms=1000000)
+REDIS_TOPICS = os.getenv('REDIS_CHANNELS').split(',')
+REDIS_TOPICS_DICT = {i: None for i in REDIS_TOPICS}
+
+redis_server = '{}:{}'.format(
+    os.getenv('REDIS_HOST'), os.getenv('REDIS_PORT', 6379)
+)
+redis_client = redis.Redis(
+    host=os.getenv('REDIS_HOST'),
+    port=os.getenv('REDIS_PORT', 6379),
+    db=0
+)
+producer = redis_client.pubsub()
 
 
 # Хэндлеры
@@ -71,7 +74,7 @@ def upload_file():
             minio_client.put_object(
                 MINIO_BUCKET_NAME, filename, file, len(file_bytes)
             )
-            mongo.db.uploads.insert(**{
+            mongo.db.uploads.insert({
                 'bucket': MINIO_BUCKET_NAME, 'filename': filename,
                 'size': len(file_bytes), 'date_upload': datetime.datetime.now().isoformat()
             })
@@ -139,13 +142,13 @@ def send_mail():
     '''.format(len(emails), emails_str)
 
 
-@app.route('/kafka/', methods=['GET', 'POST'])
+@app.route('/workers/', methods=['GET', 'POST'])
 def send_kafka_message():
     if request.method == 'POST':
         message = request.form.get('message', '')
-        topic = request.form.get('topic', KAFKA_TOPICS[0])
-        producer.send(topic, message.encode('utf8'))
-        mongo.db.kafka.insert_one(**{
+        topic = request.form.get('topic', REDIS_TOPICS[0])
+        redis_client.publish(topic, message.encode('utf8'))
+        mongo.db.kafka.insert_one({
             'message': message, 'date': datetime.datetime.now().isoformat()
         })
 
@@ -161,7 +164,7 @@ def send_kafka_message():
 
     topics = ''.join([
         '<option value={}>{}</option>'.format(topic, topic)
-        for topic in KAFKA_TOPICS
+        for topic in REDIS_TOPICS
     ])
 
     return '''
@@ -187,7 +190,7 @@ def hello_world():
     <ul>
     <li><a href="/upload-file/">Загрузить файл в s3 storage</a></li>
     <li><a href="/email/">Отправить письмо на почту</a></li>
-    <li><a href="/kafka/">Отправить письмо в брокер</a></li>
+    <li><a href="/workers/">Отправить письмо в брокер</a></li>
     </ul>
     """
 

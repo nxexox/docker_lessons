@@ -4,7 +4,7 @@ services:
   # Сервер с хранилищем файлов.
   s3:
     image: minio/minio:latest
-    container_name: miniodocker
+    container_name: miniodocker2
     command: server /data
     ports:
       - "9000:9000"
@@ -18,7 +18,7 @@ services:
   # База
   mongo:
     image: bitnami/mongodb:latest
-    container_name: mongo_docker
+    container_name: mongo_docker_2
     restart: always
 
   # Postfix для отправки почты
@@ -31,7 +31,7 @@ services:
 
   # Наше приложение для отправки почты
   postfix_backend:
-    container_name: postfix_backend_docker
+    container_name: postfix_backend_docker_2
     build:
       dockerfile: Dockerfile
       context: ./postfix_application
@@ -45,12 +45,12 @@ services:
       - SMTP_PORT=25
       - SMTP_USER=user
       - SMTP_PASSWORD=password
-      - EMAIL_BACKEND_PORT=5000
+      - EMAIL_SERVICE_PORT=5000
     restart: "no"
 
   # Наше приложение.
   backend:
-    container_name: backend_docker
+    container_name: backend_docker_2
     build:
       dockerfile: Dockerfile
       context: ./application
@@ -79,7 +79,7 @@ services:
 
   # Веб сервер как морда
   nginx:
-    container_name: nginx_docker
+    container_name: nginx_docker_2
     build:
       context: ./nginx
       dockerfile: Dockerfile

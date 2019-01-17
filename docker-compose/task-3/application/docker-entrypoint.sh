@@ -28,13 +28,13 @@ wait-for-it.sh \
     --strict \
     -- echo "Postfix Backend is up"
 
-echo "Waiting for Kafka"
+echo "Waiting for Redis"
 wait-for-it.sh \
-	--host=${KAFKA_HOST} \
-	--port=${KAFKA_PORT} \
-	--timeout=60 \
+	--host=${REDIS_HOST} \
+	--port=${REDIS_PORT} \
+	--timeout=15 \
 	--strict \
-	-- echo "Kafka is up"
+	-- echo "Redis is up"
 
 # Выполняем команду. Вместо $@ будет подставлена команда для запуска.
 exec $@

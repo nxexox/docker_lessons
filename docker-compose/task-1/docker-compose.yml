@@ -4,7 +4,7 @@ services:
   # Сервер с хранилищем файлов.
   s3:
     image: minio/minio:latest
-    container_name: miniodocker
+    container_name: miniodocker1
     command: server /data
     ports:
       - "9000:9000"
@@ -17,12 +17,12 @@ services:
   # База
   mongo:
     image: bitnami/mongodb:latest
-    container_name: mongo_docker
+    container_name: mongo_docker_1
     restart: always
 
   # Наше приложение.
   backend:
-    container_name: backend_docker
+    container_name: backend_docker_1
     build:
       dockerfile: Dockerfile
       context: ./application
@@ -41,7 +41,7 @@ services:
 
   # Веб сервер как морда
   nginx:
-    container_name: nginx_docker
+    container_name: nginx_docker_1
     build:
       context: ./nginx
       dockerfile: Dockerfile
