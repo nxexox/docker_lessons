@@ -18,5 +18,8 @@ $ docker build -t task-1-image .
 registry.skbkontur.ru/mc-k8s/task-1-application:deis
 
 
-kubectl apply -f deployment.yaml
-kubectl apply -f service.yaml
+`kubectl apply -f deployment.yaml`
+
+`kubectl apply -f service.yaml`
+
+`http://mc-k8s-m3.dev.kontur.ru:30333`
