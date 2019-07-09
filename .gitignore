@@ -1,4 +1,4 @@
-../venv/bin/python
+venv/bin/python
 venv/bin/python3
 python3.6
 venv

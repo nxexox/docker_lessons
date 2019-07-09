@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: application
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: application
+    spec:
+      containers:
+      - name: application
+        image: registry.skbkontur.ru/mc-k8s/task-1-application:deis
+        ports:
+        - containerPort: 5000

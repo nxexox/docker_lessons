@@ -2,11 +2,11 @@
 
 ## Задания по Docker
 
-* [Задание 1](./docker/task-one)
-* [Задание 2](./docker/task-two)
-* [Задание 3](./docker/task-three)
-* [Задание 4](./docker/task-foo)
-* [Задание 5](./docker/task-five)
+* [Задание 1](./docker/task-1)
+* [Задание 2](./docker/task-2)
+* [Задание 3](./docker/task-3)
+* [Задание 4](./docker/task-4)
+* [Задание 5](./docker/task-5)
 
 
 ## Несколько полезных комманд по Docker:
@@ -58,3 +58,6 @@
 Все это несколько докеров.
 К нему прицеплены: Kafka, Postgresql, Postfix для рассылки, Mongo Как NoSQL хранилище.
 И nginx как морда
+
+
+## Задания по Kubernetes
