@@ -18,3 +18,4 @@ spec:
           image: registry.skbkontur.ru/mc-k8s/task-2-front:deis
           ports:
             - containerPort: 5000
+          # TODO: Указать в ENV путь до бэкенда
