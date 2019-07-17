@@ -1,4 +1,4 @@
-# Задание 1. Запустим первое приложение.
+# Задание 2. Апи и фронт
 
 ## 1. Нужно собрать Docker образ из
 
@@ -17,15 +17,10 @@ $ docker build -t task-1-image .
 
 registry.skbkontur.ru/mc-k8s/task-1-application:deis
 
-## 2. Проверить что уже запущено
-`kubectl get all`
-
-## 3. Создать деплоймент в Kubernetes
 
 `kubectl apply -f deployment.yaml`
 
-## 4. Проверить что уже запущено
-`kubectl get all`
+`kubectl apply -f service.yaml`
 
 `http://mc-k8s-m3.dev.kontur.ru:30333`
 
