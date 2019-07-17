@@ -5,9 +5,9 @@ import requests
 
 app = Flask(__name__)
 
-
+RAISE_IF_NOT_VALID_BACKEND_URL = os.getenv('RAISE_IF_NOT_VALID_BACKEND_URL', 'true')
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://0.0.0.0:5001')
-if not BACKEND_URL:
+if RAISE_IF_NOT_VALID_BACKEND_URL.lower() != 'false' and not BACKEND_URL:
     raise ValueError('Environ `BACKEND_URL` not found in system. Please check environment settings.')
 
 
