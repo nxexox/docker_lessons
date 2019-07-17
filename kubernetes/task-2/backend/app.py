@@ -14,12 +14,13 @@ VALID_OPERATIONS = {
     '/': operator.truediv
 }
 HELLO_BY_NAME_NAMES = []
+CALCULATION_HISTORY = []
 
 
 @app.route('/jobs/create', methods=['POST'])
 def job_create():
     data = request.get_json(force=True)
-    message = data.get('message')
+    message = data.get('message', None)
     JOB_MESSAGES.append({
         'date': datetime.utcnow(),
         'message': message
@@ -29,7 +30,7 @@ def job_create():
 
 @app.route('/jobs/list', methods=['GET'])
 def job_list():
-    return jsonify(JOB_MESSAGES)
+    return jsonify(items=list(reversed(JOB_MESSAGES)))
 
 
 @app.route('/hello-by-name', methods=['GET'])
@@ -39,7 +40,7 @@ def hello_by_name():
     HELLO_BY_NAME_NAMES.append(name)
     return jsonify({
         'message': f'Привет {name}', 'name': name,
-        'history_names': HELLO_BY_NAME_NAMES
+        'history_names': list(reversed(HELLO_BY_NAME_NAMES))
     })
 
 
@@ -56,10 +57,18 @@ def calculate():
     if not operation_func:
         abort(make_response(jsonify(message=f'Invalid operation `{operation}`'), 400))
 
-    return jsonify(
+    result_data = dict(
         a=a, b=b, operation=operation,
-        result=operation_func(a, b)
+        result=operation_func(a, b),
     )
+    CALCULATION_HISTORY.append(result_data)
+
+    return jsonify(result_data)
+
+
+@app.route('/calculate/history', methods=['GET'])
+def calculate_history():
+    return jsonify(history=list(reversed(CALCULATION_HISTORY)))
 
 
 if __name__ == '__main__':
