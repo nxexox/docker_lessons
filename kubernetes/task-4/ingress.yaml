@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: application-front
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: my-application-front.ru  # Введите доменное имя
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: application-front
+          servicePort: 80

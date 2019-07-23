@@ -1,9 +1,14 @@
-from datetime import datetime
+import os
+import socket
 import operator
+from datetime import datetime
 
 from flask import Flask, request, jsonify, abort, make_response
 
 app = Flask(__name__)
+
+name = os.getenv('USER_NAME', 'бэкенд')
+host = socket.gethostname()
 
 
 JOB_MESSAGES = []
@@ -17,29 +22,12 @@ HELLO_BY_NAME_NAMES = []
 CALCULATION_HISTORY = []
 
 
-@app.route('/jobs/create', methods=['POST'])
-def job_create():
-    data = request.get_json(force=True)
-    message = data.get('message', None)
-    JOB_MESSAGES.append({
-        'date': datetime.utcnow(),
-        'message': message
-    })
-    return jsonify({'result': 'OK'})
-
-
-@app.route('/jobs/list', methods=['GET'])
-def job_list():
-    return jsonify(items=list(reversed(JOB_MESSAGES)))
-
-
 @app.route('/hello-by-name', methods=['GET'])
 def hello_by_name():
-    data = request.args
-    name = data.get('name', 'Неизвестный')
-    HELLO_BY_NAME_NAMES.append(name)
+    HELLO_BY_NAME_NAMES.append((name, host))
     return jsonify({
         'message': f'Привет {name}', 'name': name,
+        'host': host,
         'history_names': list(reversed(HELLO_BY_NAME_NAMES))
     })
 
@@ -57,9 +45,15 @@ def calculate():
     if not operation_func:
         abort(make_response(jsonify(message=f'Invalid operation `{operation}`'), 400))
 
+    try:
+        result = operation_func(a, b)
+    except Exception as e:
+        result = str(e)
+
     result_data = dict(
         a=a, b=b, operation=operation,
-        result=operation_func(a, b),
+        result=result,
+        name=name, host=host, datetime=datetime.now()
     )
     CALCULATION_HISTORY.append(result_data)
 

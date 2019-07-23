@@ -1,16 +1,43 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: application
+  name: application-back
 spec:
-  replicas: # Укажите кол-во реплик от 1 до 10
+  replicas: 1 # Укажите кол-во реплик от 1 до 5
   template:
     metadata:
       labels:
-        app: application
+        app: application-back
     spec:
       containers:
-      - name: application
-        image: registry.skbkontur.ru/mc-k8s/task-1-application:deis
+      - name: application-backend
+        image: registry.skbkontur.ru/mc-k8s/task-2:backend
         ports:
-        - containerPort: 5000
+        - containerPort: 5001
+        env:
+          - name: USER_NAME
+            value: "Введите тут свое имя"
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: application-front
+spec:
+  replicas: 1 # Укажите кол-во реплик от 1 до 5
+  template:
+    metadata:
+      labels:
+        app: application-front
+    spec:
+      containers:
+      - name: application-front
+        image: registry.skbkontur.ru/mc-k8s/task-2:front
+        ports:
+          - containerPort: 5000
+        env:
+          - name: BACKEND_URL
+            value: http://application-back:80
+          - name: USER_NAME
+            value: "Введите тут свое имя"

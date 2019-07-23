@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: checker-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: checker
+        image: bash
+        command: ["date"]
+        args: ["-R"]
+      restartPolicy: Never
+  backoffLimit: 5

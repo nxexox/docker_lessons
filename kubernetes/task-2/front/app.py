@@ -1,14 +1,18 @@
 import os
+import socket
 
 from flask import Flask, request, abort, Response
 import requests
 
 app = Flask(__name__)
 
-RAISE_IF_NOT_VALID_BACKEND_URL = os.getenv('RAISE_IF_NOT_VALID_BACKEND_URL', 'true')
+RAISE_IF_NOT_VALID_BACKEND_URL = os.getenv('RAISE_IF_NOT_VALID_BACKEND_URL', 'false')
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://0.0.0.0:5001')
 if RAISE_IF_NOT_VALID_BACKEND_URL.lower() != 'false' and not BACKEND_URL:
     raise ValueError('Environ `BACKEND_URL` not found in system. Please check environment settings.')
+
+name = os.getenv('USER_NAME', 'Неизвестный')
+host = socket.gethostname()
 
 
 def calculate_html_render(a=None, b=None, operation=None, result=None, history=None, error=None):
@@ -17,7 +21,7 @@ def calculate_html_render(a=None, b=None, operation=None, result=None, history=N
         <title>Калькулятор</title>
         <a href="/"><-- Назад</a>
         {error}
-        <h1>Калькулятор, введите данные для расчета</h1>
+        <h1>Привет "{front_name}", ты на сервере: {front_host}</h1>
         <h2>Калькулятор вычисляет выражение a (+ - * /) b = </h2>
         <form method=post>
           <label>a=</label>
@@ -35,16 +39,18 @@ def calculate_html_render(a=None, b=None, operation=None, result=None, history=N
           <input type="number" name="result" value="{result}" placeholder="Тут будет результат" required disabled>
           <input type=submit>
         </form>
-        <h2>История расчетов: </h2>
+        <h2>История расчетов {backend_server}: </h2>
         <ul>{history}</ul>
     '''.format(
+        front_name=name, front_host=host,
         error=f'<h1 style="color: red">{error}</h1>' if error else '',
         a=a if a else '', b=b if b else '',
         result=result if result else '',
         history=''.join(map(
-            lambda x: f'<li>{x["a"]} {x["operation"]} {x["b"]} = {x["result"]}</li>',
+            lambda x: f'<li><b>{x["datetime"]}</b>: {x["a"]} {x["operation"]} {x["b"]} = {x["result"]}</li>',
             history
-        )) if history else ''
+        )) if history else '',
+        backend_server='(Взята с бэкенд сервера {})'.format(history[0]['host']) if history else ''
     )
 
 
@@ -53,91 +59,37 @@ def index():
     return '''
         <!doctype html>
         <title>Главная страница</title>
-        <h1>Что умеет ваше приложение:</h1>
+        <h1>Привет "{front_name}", ты на сервере: {front_host}</h1>
+        <h2>Что умеет ваше приложение:</h2>
         <ul>
         <li><a href="/hello-by-name?name=Неизвестный">Приветствие по имени</a></li>
         <li><a href="/calculate">Калькулятор</a></li>
-        <li><a href="/jobs/list">Список запросов от JOB</a></li>
         </ul>
-        '''
-
-
-@app.route('/jobs/list', methods=['GET'])
-def job_list():
-    try:
-        resp = requests.get(f'{BACKEND_URL}/jobs/list')
-    except Exception as e:
-        bad_response_text = '''
-            <!doctype html>
-            <a href="/"><-- Назад</a>
-            <title>Не удалось загрузить страницу</title>
-            <h1 style="color: red">Не удалось загрузить страницу со список jobs. `{error}`</h1>
-        '''.format(error=e)
-        return abort(Response(bad_response_text, status=400))
-
-    jobs = resp.json().get('items', [])
-    return '''
-        <!doctype html>
-        <title>Список выполненных JOBS</title>
-        <a href="/"><-- Назад</a>
-        <h1 style="color: green">Список выполненных JOBS. Всего: {count}</h1>
-        <ul>
-            {jobs}
-        </ul>
-    '''.format(
-        count=len(jobs),
-        jobs=''.join(map(
-            lambda x: f'<li>Date: {x["date"]}, Message: {x["message"]}</li>',
-            jobs
-        ))
-    )
+        '''.format(front_name=name, front_host=host)
 
 
 @app.route('/hello-by-name', methods=['GET'])
 def hello_by_name():
-    name = request.args.get('name', None)
-    if not name:
-        bad_response_text = '''
-        <!doctype html>
-        <title>Ошибка! Пожалуйста введите имя!</title>
-        <a href="/"><-- Назад</a>
-        <h1 style="color: red">Пожалуйста введите имя</h1>
-        <form method=get>
-          <label>Ваше имя</label>
-          <input type="text" name="name" placeholder="Пожалуйста введите имя" required>
-          <input type=submit>
-        </form>
-        '''
-        return abort(Response(bad_response_text, status=400))
-
     try:
-        resp = requests.get(f'{BACKEND_URL}/hello-by-name', params={'name': name})
+        resp = requests.get(f'{BACKEND_URL}/hello-by-name')
     except Exception as e:
         bad_response_text = '''
         <!doctype html>
         <title>Ошибка! Не удалось сделать запрос до бэкенда!</title>
+        <h1>Привет "{front_name}", ты на сервере: {front_host}</h1>
         <a href="/"><-- Назад</a>
-        <h1 style="color: red">Ошибка! Не удалось сделать запрос до бэкенда `{host}`! `{error}`.</h1>
-        <form method=get>
-          <label>Ваше имя</label>
-          <input type="text" name="name" placeholder="Пожалуйста введите имя" required>
-          <input type=submit>
-        </form>
-        '''.format(host=BACKEND_URL, error=e)
+        <h2 style="color: red">Ошибка! Не удалось сделать запрос до бэкенда `{host}`! `{error}`.</h2>
+        '''.format(host=BACKEND_URL, error=e, front_name=name, front_host=host)
         return abort(Response(bad_response_text, status=400))
 
     if not resp.ok:
         bad_response_text = '''
         <!doctype html>
         <title>Ошибка! Бэкенд вернул ошибку!</title>
+        <h1>Привет "{front_name}", ты на сервере: {front_host}</h1>
         <a href="/"><-- Назад</a>
-        <h1 style="color: red">Ошибка! Бэкенд вернул ошибку! `{}`.</h1>
-        <form method=get>
-          <label>Ваше имя</label>
-          <input type="text" name="name" placeholder="Пожалуйста введите имя" required>
-          <input type=submit>
-        </form>
-        '''.format(resp.content)
+        <h2 style="color: red">Ошибка! Бэкенд вернул ошибку! `{content}`.</h2>
+        '''.format(content=resp.content, front_name=name, front_host=host)
         return abort(Response(bad_response_text, status=400))
 
     data = resp.json()
@@ -146,21 +98,18 @@ def hello_by_name():
         <!doctype html>
         <title>{message}</title>
         <a href="/"><-- Назад</a>
-        <h1 style="color: green">{message}</h1>
-        <form method=get>
-          <label>Ваше имя</label>
-          <input type="text" name="name" placeholder="Пожалуйста введите имя" value="{name}" required>
-          <input type=submit>
-        </form>
-        
+        <h1>Привет "{front_name}", ты на сервере: {front_host}</h1>
+        <h2>Бэкенд сервер: {back_host}</h2>
+        <h2 style="color: green">{message}</h2>
         <h2>История запросов:<h2>
         <ul>
             {history}
         </ul>
         
         '''.format(
+        front_name=name, front_host=host,
+        back_name=data.get('name', None), back_host=data.get('host', None),
         message=data.get('message', None),
-        name=data.get('name', None),
         history=''.join(map(lambda x: f'<li>{x}</li>', data.get('history_names', [])))
     )
 

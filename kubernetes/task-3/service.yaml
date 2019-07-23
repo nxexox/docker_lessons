@@ -5,9 +5,21 @@ metadata:
 spec:
   selector:
     app: application-front
-  type: NodePort  # Для доступа без ingress
   ports:
   - protocol: TCP
     port: 80
     targetPort: 5000
-    # nodePort: 30333  # Порт что торчит наружу, если не указывать назначается автоматически
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: application-back
+spec:
+  selector:
+    app: application-back
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5001
