@@ -1,0 +1,25 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: application-front
+spec:
+  selector:
+    app: application-front
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: application-back
+spec:
+  selector:
+    app: application-back
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5001
